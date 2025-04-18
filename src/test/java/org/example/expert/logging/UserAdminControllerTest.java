@@ -1,6 +1,8 @@
 package org.example.expert.logging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.expert.config.AspectConfig;
+import org.example.expert.config.LoggingAOP;
 import org.example.expert.config.WebConfig;
 import org.example.expert.domain.user.controller.UserAdminController;
 import org.example.expert.domain.user.dto.request.UserRoleChangeRequest;
@@ -12,12 +14,13 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserAdminController.class)
-@Import(WebConfig.class)
+@Import({WebConfig.class, LoggingAOP.class, AspectConfig.class})
 public class UserAdminControllerTest {
 
     @Autowired
@@ -36,9 +39,12 @@ public class UserAdminControllerTest {
         UserRoleChangeRequest request = new UserRoleChangeRequest("ADMIN");
 
         // when
-        mockMvc.perform(patch("/admin/users/{userId}", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        MockHttpServletRequestBuilder requestBuilder = patch("/admin/users/{userId}", userId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request));
+
+        // when & then
+        mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk());
     }
 
